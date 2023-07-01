@@ -37,7 +37,7 @@
 
 ## Решение:
 
-* 1) текст Dockerfile:*
+*1) текст Dockerfile:*
 ```bash
 FROM centos:7
 
@@ -216,7 +216,7 @@ yellow open   ind-2            uPpFOwHVRPKvg-KAzm1SKg   2   1          0        
 
 Как вы думаете, почему часть индексов и кластер находятся в состоянии yellow?
 
-*На лекции это было озвучено. Дело в том, что у нас однонодовый кластер. Поэтому данным некуда реплицироваться.*
+   > *На лекции это было озвучено. Дело в том, что у нас однонодовый кластер. Поэтому данным некуда реплицироваться.*
 
 Удалите все индексы.
 
@@ -256,28 +256,77 @@ yellow open   ind-2            uPpFOwHVRPKvg-KAzm1SKg   2   1          0        
 
 **Приведите в ответе** запрос API и результат вызова API для создания репозитория.
 
+```bash
+[root@665c066e6aa9 elasticsearch-7.17.0]# curl -X PUT "localhost:9200/_snapshot/netology_backup?pretty" -H 'Content-Type: application/json' -d'
+> {
+>   "type": "fs",
+>   "settings": {
+>     "location": "/opt/backup",
+>     "compress": true
+>   }
+> }'
+{
+  "acknowledged" : true
+}
+```
+
 Создайте индекс `test` с 0 реплик и 1 шардом и **приведите в ответе** список индексов.
+
+```bash
+[root@665c066e6aa9 elasticsearch-7.17.0]# curl 'localhost:9200/_cat/indices?v'
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases lxwqZ1S_TRW-4oxdhsEenQ   1   0         42            0       40mb           40mb
+green  open   test             wXoziANCRTWdKUaoVIWDmg   1   0          0            0       226b           226b
+```
 
 [Создайте `snapshot`](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-take-snapshot.html) 
 состояния кластера `Elasticsearch`.
 
 **Приведите в ответе** список файлов в директории со `snapshot`.
 
+```bash
+[root@665c066e6aa9 elasticsearch-7.17.0]# ls -la /opt/backup/
+total 40
+drwxr-xr-x 3 elasticsearch elasticsearch 4096 Jul  1 16:21 .
+drwxr-xr-x 1 root          root          4096 Jul  1 16:08 ..
+-rw-r--r-- 1 elasticsearch elasticsearch 1422 Jul  1 16:21 index-0
+-rw-r--r-- 1 elasticsearch elasticsearch    8 Jul  1 16:21 index.latest
+drwxr-xr-x 6 elasticsearch elasticsearch 4096 Jul  1 16:21 indices
+-rw-r--r-- 1 elasticsearch elasticsearch 9730 Jul  1 16:21 meta-DOXxMfeySD-n-BbkebCWng.dat
+-rw-r--r-- 1 elasticsearch elasticsearch  448 Jul  1 16:21 snap-DOXxMfeySD-n-BbkebCWng.dat
+```
+
 Удалите индекс `test` и создайте индекс `test-2`. **Приведите в ответе** список индексов.
+
+```bash
+[root@665c066e6aa9 elasticsearch-7.17.0]# curl 'localhost:9200/_cat/indices?v'
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases lxwqZ1S_TRW-4oxdhsEenQ   1   0         42            0       40mb           40mb
+green  open   test-2           549eohPuRhCHKSlBWTveCA   1   0          0            0       226b           226b
+```
 
 [Восстановите](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-restore-snapshot.html) состояние
 кластера `Elasticsearch` из `snapshot`, созданного ранее. 
 
 **Приведите в ответе** запрос к API восстановления и итоговый список индексов.
 
+```bash
+[root@665c066e6aa9 elasticsearch-7.17.0]# curl -X POST "localhost:9200/_snapshot/netology_backup/snapshot_1/_restore?pretty" -H 'Content-Type: application/json' -d'
+{
+  "indices": "*",
+  "include_global_state": true
+}
+'
+{
+  "accepted" : true
+}
+[root@665c066e6aa9 elasticsearch-7.17.0]# curl 'localhost:9200/_cat/indices?v'
+health status index            uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases GAIOuFOITGSmlDUZAIfqOQ   1   0         42            0       40mb           40mb
+green  open   test-2           549eohPuRhCHKSlBWTveCA   1   0          0            0       226b           226b
+green  open   test             lCOFa615Snai8acGCy_DqA   1   0          0            0       226b           226b
+```
+
 Подсказки:
 
 - возможно, вам понадобится доработать `elasticsearch.yml` в части директивы `path.repo` и перезапустить `Elasticsearch`.
-
----
-
-### Как cдавать задание
-
-Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
-
----
