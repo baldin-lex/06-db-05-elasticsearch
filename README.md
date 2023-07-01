@@ -35,6 +35,71 @@
 
 Далее мы будем работать с этим экземпляром Elasticsearch.
 
+## Решение:
+
+* 1) текст Dockerfile:*
+```bash
+FROM centos:7
+
+RUN yum install wget -y && \
+    yum install perl-Digest-SHA -y
+
+ENV ES_DIR="/opt/elasticsearch"
+ENV ES_HOME="/opt/elasticsearch/elasticsearch-7.17.0"
+
+WORKDIR ${ES_DIR}
+
+RUN wget --quiet https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.17.0-linux-x86_64$
+    wget --quiet https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.17.0-linux-x86_64$
+    sha512sum --check --quiet elasticsearch-7.17.0-linux-x86_64.tar.gz.sha512 && \
+    tar -xzf elasticsearch-7.17.0-linux-x86_64.tar.gz
+
+COPY elasticsearch.yml ${ES_HOME}/config
+
+ENV ES_USER="elasticsearch"
+
+RUN useradd ${ES_USER}
+
+RUN mkdir -p "/var/lib/elasticsearch" && \
+    mkdir -p "/var/log/elasticsearch"
+
+RUN chown -R ${ES_USER}: "${ES_DIR}" && \
+    chown -R ${ES_USER}: "/var/lib/elasticsearch" && \
+    chown -R ${ES_USER}: "/var/log/elasticsearch"
+
+USER ${ES_USER}
+
+WORKDIR "${ES_HOME}"
+
+EXPOSE 9200
+EXPOSE 9300
+
+ENTRYPOINT ["./bin/elasticsearch"]
+```
+*2) ссылка на образ в репозитории dockerhub:*  
+[baldinlex/elasticsearch](https://hub.docker.com/r/baldinlex/elasticsearch)
+
+*3) ответ `Elasticsearch` на запрос пути `/` в json-виде:*
+```json
+{
+  "name" : "netology_test",
+  "cluster_name" : "netology",
+  "cluster_uuid" : "M9-OfcZvRxa-jObw03aJPA",
+  "version" : {
+    "number" : "7.17.0",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "bee86328705acaa9a6daede7140defd4d9ec56bd",
+    "build_date" : "2022-01-28T08:36:04.875279988Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.11.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
 ## Задача 2
 
 В этом задании вы научитесь:
